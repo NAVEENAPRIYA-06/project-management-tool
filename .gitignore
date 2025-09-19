@@ -1,0 +1,12 @@
+# Node modules
+/node_modules
+/client/node_modules
+
+# Log files
+npm-debug.log*
+
+# Environment variables
+.env
+
+# Production build folder
+/client/build
