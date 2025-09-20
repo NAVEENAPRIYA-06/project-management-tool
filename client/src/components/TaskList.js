@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useDrag, useDrop } from 'react-dnd';
 import { Box, Heading, List, ListItem, Text, Button, Flex, Spacer, Tag, IconButton } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 
@@ -25,16 +26,17 @@ function TaskList({ onTaskAdded }) {
       onTaskAdded();
     } catch (error) {
       console.error('Error deleting task:', error);
+      alert('Error deleting task. Check console for details.');
     }
   };
 
-  const handleUpdateStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === 'To Do' ? 'In Progress' : currentStatus === 'In Progress' ? 'Done' : 'To Do';
+  const moveTask = async (id, newStatus) => {
     try {
       await axios.put(`http://localhost:5000/api/tasks/${id}`, { status: newStatus });
       onTaskAdded();
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error updating task status:', error);
+      alert('Error updating task status. Check console for details.');
     }
   };
 
@@ -47,10 +49,58 @@ function TaskList({ onTaskAdded }) {
     }
   };
 
-  // Filter tasks into three categories
   const todoTasks = tasks.filter(task => task.status === 'To Do');
   const inProgressTasks = tasks.filter(task => task.status === 'In Progress');
   const doneTasks = tasks.filter(task => task.status === 'Done');
+
+  const createDropZone = (status) => {
+    const [, dropRef] = useDrop(() => ({
+      accept: 'task',
+      drop: (item) => moveTask(item.id, status),
+    }));
+    return dropRef;
+  };
+
+  const todoDropRef = createDropZone('To Do');
+  const inProgressDropRef = createDropZone('In Progress');
+  const doneDropRef = createDropZone('Done');
+
+  const DraggableTask = ({ task }) => {
+    const [{ isDragging }, dragRef] = useDrag(() => ({
+      type: 'task',
+      item: { id: task._id },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    }));
+
+    return (
+      <ListItem
+        ref={dragRef}
+        opacity={isDragging ? 0.5 : 1}
+        p={3} borderWidth="1px" borderRadius="md" bg="white"
+      >
+        <Flex alignItems="center">
+          <Box>
+            <Heading as="h4" size="sm">{task.title}</Heading>
+            <Text fontSize="sm" color="gray.600">{task.description}</Text>
+            {task.assignedTo && <Text fontSize="xs" color="gray.500">Assigned to: {task.assignedTo}</Text>}
+            <Tag size="sm" colorScheme={getStatusColor(task.status)} mt={1}>
+              {task.status}
+            </Tag>
+          </Box>
+          <Spacer />
+          <IconButton
+            aria-label="Delete task"
+            icon={<DeleteIcon />}
+            size="sm"
+            colorScheme="red"
+            onClick={() => handleDelete(task._id)}
+          />
+        </Flex>
+      </ListItem>
+    );
+  };
 
   return (
     <Box p={6} borderWidth="1px" borderRadius="lg" w="100%" bg="white" boxShadow="md">
@@ -59,112 +109,31 @@ function TaskList({ onTaskAdded }) {
       ) : (
         <Flex>
           {/* To Do Column */}
-          <Box flex="1" mr={2} p={4} bg="gray.50" borderRadius="md" minH="300px">
+          <Box flex="1" mr={2} p={4} bg="gray.50" borderRadius="md" minH="300px" ref={todoDropRef}>
             <Heading as="h4" size="sm" mb={2}>To Do</Heading>
             <List spacing={3}>
               {todoTasks.map(task => (
-                <ListItem key={task._id} p={3} borderWidth="1px" borderRadius="md" bg="white">
-                  <Flex alignItems="center">
-                    <Box>
-                      <Heading as="h4" size="sm">{task.title}</Heading>
-                      <Text fontSize="sm" color="gray.600">{task.description}</Text>
-                      {task.assignedTo && <Text fontSize="xs" color="gray.500">Assigned to: {task.assignedTo}</Text>}
-                      <Tag size="sm" colorScheme={getStatusColor(task.status)} mt={1}>
-                        {task.status}
-                      </Tag>
-                    </Box>
-                    <Spacer />
-                    <Button
-                      size="sm"
-                      colorScheme="purple"
-                      mr={2}
-                      onClick={() => handleUpdateStatus(task._id, task.status)}
-                    >
-                      Toggle Status
-                    </Button>
-                    <IconButton
-                      aria-label="Delete task"
-                      icon={<DeleteIcon />}
-                      size="sm"
-                      colorScheme="red"
-                      onClick={() => handleDelete(task._id)}
-                    />
-                  </Flex>
-                </ListItem>
+                <DraggableTask key={task._id} task={task} />
               ))}
             </List>
           </Box>
 
           {/* In Progress Column */}
-          <Box flex="1" mx={2} p={4} bg="gray.50" borderRadius="md" minH="300px">
+          <Box flex="1" mx={2} p={4} bg="gray.50" borderRadius="md" minH="300px" ref={inProgressDropRef}>
             <Heading as="h4" size="sm" mb={2}>In Progress</Heading>
             <List spacing={3}>
               {inProgressTasks.map(task => (
-                <ListItem key={task._id} p={3} borderWidth="1px" borderRadius="md" bg="white">
-                  <Flex alignItems="center">
-                    <Box>
-                      <Heading as="h4" size="sm">{task.title}</Heading>
-                      <Text fontSize="sm" color="gray.600">{task.description}</Text>
-                      {task.assignedTo && <Text fontSize="xs" color="gray.500">Assigned to: {task.assignedTo}</Text>}
-                      <Tag size="sm" colorScheme={getStatusColor(task.status)} mt={1}>
-                        {task.status}
-                      </Tag>
-                    </Box>
-                    <Spacer />
-                    <Button
-                      size="sm"
-                      colorScheme="purple"
-                      mr={2}
-                      onClick={() => handleUpdateStatus(task._id, task.status)}
-                    >
-                      Toggle Status
-                    </Button>
-                    <IconButton
-                      aria-label="Delete task"
-                      icon={<DeleteIcon />}
-                      size="sm"
-                      colorScheme="red"
-                      onClick={() => handleDelete(task._id)}
-                    />
-                  </Flex>
-                </ListItem>
+                <DraggableTask key={task._id} task={task} />
               ))}
             </List>
           </Box>
 
           {/* Done Column */}
-          <Box flex="1" ml={2} p={4} bg="gray.50" borderRadius="md" minH="300px">
+          <Box flex="1" ml={2} p={4} bg="gray.50" borderRadius="md" minH="300px" ref={doneDropRef}>
             <Heading as="h4" size="sm" mb={2}>Done</Heading>
             <List spacing={3}>
               {doneTasks.map(task => (
-                <ListItem key={task._id} p={3} borderWidth="1px" borderRadius="md" bg="white">
-                  <Flex alignItems="center">
-                    <Box>
-                      <Heading as="h4" size="sm">{task.title}</Heading>
-                      <Text fontSize="sm" color="gray.600">{task.description}</Text>
-                      {task.assignedTo && <Text fontSize="xs" color="gray.500">Assigned to: {task.assignedTo}</Text>}
-                      <Tag size="sm" colorScheme={getStatusColor(task.status)} mt={1}>
-                        {task.status}
-                      </Tag>
-                    </Box>
-                    <Spacer />
-                    <Button
-                      size="sm"
-                      colorScheme="purple"
-                      mr={2}
-                      onClick={() => handleUpdateStatus(task._id, task.status)}
-                    >
-                      Toggle Status
-                    </Button>
-                    <IconButton
-                      aria-label="Delete task"
-                      icon={<DeleteIcon />}
-                      size="sm"
-                      colorScheme="red"
-                      onClick={() => handleDelete(task._id)}
-                    />
-                  </Flex>
-                </ListItem>
+                <DraggableTask key={task._id} task={task} />
               ))}
             </List>
           </Box>
