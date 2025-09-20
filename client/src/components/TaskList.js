@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useDrag, useDrop } from 'react-dnd';
-import { Box, Heading, List, ListItem, Text, Button, Flex, Spacer, Tag, IconButton } from '@chakra-ui/react';
-import { DeleteIcon } from '@chakra-ui/icons';
+import { Box, Heading, List, ListItem, Text, Flex, Spacer, Tag, IconButton, useColorModeValue } from '@chakra-ui/react';
+import { DeleteIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 function TaskList({ onTaskAdded }) {
   const [tasks, setTasks] = useState([]);
+
+  // Dynamic colors for dark mode
+  const columnBg = useColorModeValue('gray.50', 'gray.700');
+  const taskBg = useColorModeValue('white', 'gray.800');
+  const taskColor = useColorModeValue('gray.600', 'gray.400');
+  const headingColor = useColorModeValue('gray.800', 'whiteAlpha.900');
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -16,7 +22,6 @@ function TaskList({ onTaskAdded }) {
         console.error('Error fetching tasks:', error);
       }
     };
-
     fetchTasks();
   }, [onTaskAdded]);
 
@@ -26,7 +31,6 @@ function TaskList({ onTaskAdded }) {
       onTaskAdded();
     } catch (error) {
       console.error('Error deleting task:', error);
-      alert('Error deleting task. Check console for details.');
     }
   };
 
@@ -36,7 +40,6 @@ function TaskList({ onTaskAdded }) {
       onTaskAdded();
     } catch (error) {
       console.error('Error updating task status:', error);
-      alert('Error updating task status. Check console for details.');
     }
   };
 
@@ -53,17 +56,21 @@ function TaskList({ onTaskAdded }) {
   const inProgressTasks = tasks.filter(task => task.status === 'In Progress');
   const doneTasks = tasks.filter(task => task.status === 'Done');
 
-  const createDropZone = (status) => {
-    const [, dropRef] = useDrop(() => ({
-      accept: 'task',
-      drop: (item) => moveTask(item.id, status),
-    }));
-    return dropRef;
-  };
+  // Define droppable areas for each column
+  const [, todoDropRef] = useDrop(() => ({
+    accept: 'task',
+    drop: (item) => moveTask(item.id, 'To Do'),
+  }));
 
-  const todoDropRef = createDropZone('To Do');
-  const inProgressDropRef = createDropZone('In Progress');
-  const doneDropRef = createDropZone('Done');
+  const [, inProgressDropRef] = useDrop(() => ({
+    accept: 'task',
+    drop: (item) => moveTask(item.id, 'In Progress'),
+  }));
+
+  const [, doneDropRef] = useDrop(() => ({
+    accept: 'task',
+    drop: (item) => moveTask(item.id, 'Done'),
+  }));
 
   const DraggableTask = ({ task }) => {
     const [{ isDragging }, dragRef] = useDrag(() => ({
@@ -78,18 +85,26 @@ function TaskList({ onTaskAdded }) {
       <ListItem
         ref={dragRef}
         opacity={isDragging ? 0.5 : 1}
-        p={3} borderWidth="1px" borderRadius="md" bg="white"
+        p={3} borderWidth="1px" borderRadius="md" bg={taskBg}
       >
         <Flex alignItems="center">
           <Box>
-            <Heading as="h4" size="sm">{task.title}</Heading>
-            <Text fontSize="sm" color="gray.600">{task.description}</Text>
-            {task.assignedTo && <Text fontSize="xs" color="gray.500">Assigned to: {task.assignedTo}</Text>}
+            <Heading as="h4" size="sm" color={headingColor}>{task.title}</Heading>
+            <Text fontSize="sm" color={taskColor}>{task.description}</Text>
+            {task.assignedTo && <Text fontSize="xs" color={taskColor}>Assigned to: {task.assignedTo}</Text>}
             <Tag size="sm" colorScheme={getStatusColor(task.status)} mt={1}>
               {task.status}
             </Tag>
           </Box>
           <Spacer />
+          <IconButton
+            aria-label="Toggle status"
+            icon={<ChevronRightIcon />}
+            size="sm"
+            colorScheme="purple"
+            mr={2}
+            onClick={() => moveTask(task._id, 'Done')}
+          />
           <IconButton
             aria-label="Delete task"
             icon={<DeleteIcon />}
@@ -103,14 +118,14 @@ function TaskList({ onTaskAdded }) {
   };
 
   return (
-    <Box p={6} borderWidth="1px" borderRadius="lg" w="100%" bg="white" boxShadow="md">
+    <Box p={6} borderWidth="1px" borderRadius="lg" w="100%" bg={useColorModeValue('white', 'gray.700')} boxShadow="md">
       {tasks.length === 0 ? (
         <Text>No tasks to display. Add a new task above!</Text>
       ) : (
         <Flex>
           {/* To Do Column */}
-          <Box flex="1" mr={2} p={4} bg="gray.50" borderRadius="md" minH="300px" ref={todoDropRef}>
-            <Heading as="h4" size="sm" mb={2}>To Do</Heading>
+          <Box flex="1" mr={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={todoDropRef}>
+            <Heading as="h4" size="sm" mb={2} color={headingColor}>To Do</Heading>
             <List spacing={3}>
               {todoTasks.map(task => (
                 <DraggableTask key={task._id} task={task} />
@@ -119,8 +134,8 @@ function TaskList({ onTaskAdded }) {
           </Box>
 
           {/* In Progress Column */}
-          <Box flex="1" mx={2} p={4} bg="gray.50" borderRadius="md" minH="300px" ref={inProgressDropRef}>
-            <Heading as="h4" size="sm" mb={2}>In Progress</Heading>
+          <Box flex="1" mx={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={inProgressDropRef}>
+            <Heading as="h4" size="sm" mb={2} color={headingColor}>In Progress</Heading>
             <List spacing={3}>
               {inProgressTasks.map(task => (
                 <DraggableTask key={task._id} task={task} />
@@ -129,8 +144,8 @@ function TaskList({ onTaskAdded }) {
           </Box>
 
           {/* Done Column */}
-          <Box flex="1" ml={2} p={4} bg="gray.50" borderRadius="md" minH="300px" ref={doneDropRef}>
-            <Heading as="h4" size="sm" mb={2}>Done</Heading>
+          <Box flex="1" ml={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={doneDropRef}>
+            <Heading as="h4" size="sm" mb={2} color={headingColor}>Done</Heading>
             <List spacing={3}>
               {doneTasks.map(task => (
                 <DraggableTask key={task._id} task={task} />
