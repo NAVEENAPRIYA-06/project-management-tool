@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useDrag, useDrop } from 'react-dnd';
-import { Box, Heading, List, ListItem, Text, Flex, Spacer, Tag, IconButton, useColorModeValue } from '@chakra-ui/react';
+import { Box, Heading, List,Text, Flex, Spacer, Tag, IconButton, useColorModeValue, chakra } from '@chakra-ui/react';
 import { DeleteIcon, ChevronRightIcon, EditIcon } from '@chakra-ui/icons';
+import { motion } from 'framer-motion';
+
+const MotionListItem = chakra(motion.li);
 
 function TaskList({ onTaskAdded, onEditClick }) {
   const [tasks, setTasks] = useState([]);
 
-  // Dynamic colors for dark mode
   const columnBg = useColorModeValue('gray.50', 'gray.700');
   const taskBg = useColorModeValue('white', 'gray.800');
   const taskColor = useColorModeValue('gray.600', 'gray.400');
@@ -83,16 +85,27 @@ function TaskList({ onTaskAdded, onEditClick }) {
     }));
 
     return (
-      <ListItem
+      <MotionListItem
         ref={dragRef}
         opacity={isDragging ? 0.5 : 1}
         p={3} borderWidth="1px" borderRadius="md" bg={taskBg}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
       >
-        <Flex alignItems="center">
-          <Box>
-            <Heading as="h4" size="sm" color={headingColor}>{task.title}</Heading>
-            <Text fontSize="sm" color={taskColor}>{task.description}</Text>
-            {task.assignedTo && <Text fontSize="xs" color={taskColor}>Assigned to: {task.assignedTo}</Text>}
+        <Flex alignItems="center" flexWrap="nowrap">
+          <Box flexGrow={1} minWidth="0">
+            <Heading as="h4" size="sm" color={headingColor} isTruncated>
+              {task.title}
+            </Heading>
+            <Text fontSize="sm" color={taskColor}>
+              {task.description}
+            </Text>
+            {task.assignedTo && (
+              <Text fontSize="xs" color={taskColor}>
+                Assigned to: {task.assignedTo}
+              </Text>
+            )}
             <Tag size="sm" colorScheme={getStatusColor(task.status)} mt={1}>
               {task.status}
             </Tag>
@@ -122,7 +135,7 @@ function TaskList({ onTaskAdded, onEditClick }) {
             onClick={() => handleDelete(task._id)}
           />
         </Flex>
-      </ListItem>
+      </MotionListItem>
     );
   };
 
@@ -131,7 +144,7 @@ function TaskList({ onTaskAdded, onEditClick }) {
       {tasks.length === 0 ? (
         <Text>No tasks to display. Add a new task above!</Text>
       ) : (
-        <Flex>
+        <Flex flexWrap="wrap">
           <Box flex="1" mr={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={todoDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>To Do</Heading>
             <List spacing={3}>
