@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Box, Heading, Input, Textarea, Button, VStack, useColorModeValue } from '@chakra-ui/react';
 
-function TaskForm({ onTaskAdded }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
-  
+function TaskEditForm({ task, onClose, onTaskEdited }) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description);
+  const [assignedTo, setAssignedTo] = useState(task.assignedTo);
   const formBg = useColorModeValue('white', 'gray.700');
   const inputBg = useColorModeValue('white', 'gray.800');
   const inputColor = useColorModeValue('gray.800', 'whiteAlpha.900');
@@ -15,23 +14,18 @@ function TaskForm({ onTaskAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const newTask = { title, description, assignedTo };
-      await axios.post('http://localhost:5000/api/tasks', newTask);
-
-      setTitle('');
-      setDescription('');
-      setAssignedTo('');
-
-      onTaskAdded();
+      const updatedTask = { title, description, assignedTo };
+      await axios.put(`http://localhost:5000/api/tasks/${task._id}`, updatedTask);
+      onTaskEdited();
+      onClose();
     } catch (error) {
-      console.error('Error creating task:', error);
-      alert('Error creating task. Check console for details.');
+      console.error('Error updating task:', error);
     }
   };
 
   return (
     <Box p={6} borderWidth="1px" borderRadius="lg" w="100%" bg={formBg} boxShadow="md">
-      <Heading as="h3" size="md" mb={4} color={headingColor}>Add New Task</Heading>
+      <Heading as="h3" size="md" mb={4} color={headingColor}>Edit Task</Heading>
       <form onSubmit={handleSubmit}>
         <VStack spacing={3}>
           <Input
@@ -57,7 +51,10 @@ function TaskForm({ onTaskAdded }) {
             color={inputColor}
           />
           <Button type="submit" colorScheme="blue" w="full">
-            Add Task
+            Update Task
+          </Button>
+          <Button onClick={onClose} colorScheme="red" w="full" mt={2}>
+            Cancel
           </Button>
         </VStack>
       </form>
@@ -65,4 +62,4 @@ function TaskForm({ onTaskAdded }) {
   );
 }
 
-export default TaskForm;
+export default TaskEditForm;

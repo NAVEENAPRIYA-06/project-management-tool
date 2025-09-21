@@ -5,15 +5,25 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
+import TaskEditForm from './components/TaskEditForm'; // Import the new component
 
 function App() {
   const [refresh, setRefresh] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const { colorMode, toggleColorMode } = useColorMode();
   const bg = useColorModeValue('gray.100', 'gray.800');
   const color = useColorModeValue('gray.800', 'whiteAlpha.900');
 
   const handleTaskAdded = () => {
     setRefresh(!refresh);
+  };
+  
+  const handleEditClick = (task) => {
+    setEditingTask(task);
+  };
+  
+  const handleCloseEditForm = () => {
+    setEditingTask(null);
   };
 
   return (
@@ -31,8 +41,16 @@ function App() {
             <Heading as="h1" size="xl" color={color}>
               Project Management Tool
             </Heading>
-            <TaskForm onTaskAdded={handleTaskAdded} />
-            <TaskList key={refresh} onTaskAdded={handleTaskAdded} />
+            {editingTask ? (
+              <TaskEditForm task={editingTask} onClose={handleCloseEditForm} onTaskEdited={handleTaskAdded} />
+            ) : (
+              <TaskForm onTaskAdded={handleTaskAdded} />
+            )}
+            <TaskList 
+              key={refresh} 
+              onTaskAdded={handleTaskAdded} 
+              onEditClick={handleEditClick} 
+            />
           </VStack>
         </Container>
       </Box>

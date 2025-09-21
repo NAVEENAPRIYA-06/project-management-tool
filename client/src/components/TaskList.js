@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useDrag, useDrop } from 'react-dnd';
 import { Box, Heading, List, ListItem, Text, Flex, Spacer, Tag, IconButton, useColorModeValue } from '@chakra-ui/react';
-import { DeleteIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { DeleteIcon, ChevronRightIcon, EditIcon } from '@chakra-ui/icons';
 
-function TaskList({ onTaskAdded }) {
+function TaskList({ onTaskAdded, onEditClick }) {
   const [tasks, setTasks] = useState([]);
 
   // Dynamic colors for dark mode
@@ -31,6 +31,7 @@ function TaskList({ onTaskAdded }) {
       onTaskAdded();
     } catch (error) {
       console.error('Error deleting task:', error);
+      alert('Error deleting task. Check console for details.');
     }
   };
 
@@ -40,6 +41,7 @@ function TaskList({ onTaskAdded }) {
       onTaskAdded();
     } catch (error) {
       console.error('Error updating task status:', error);
+      alert('Error updating task status. Check console for details.');
     }
   };
 
@@ -56,7 +58,6 @@ function TaskList({ onTaskAdded }) {
   const inProgressTasks = tasks.filter(task => task.status === 'In Progress');
   const doneTasks = tasks.filter(task => task.status === 'Done');
 
-  // Define droppable areas for each column
   const [, todoDropRef] = useDrop(() => ({
     accept: 'task',
     drop: (item) => moveTask(item.id, 'To Do'),
@@ -98,6 +99,14 @@ function TaskList({ onTaskAdded }) {
           </Box>
           <Spacer />
           <IconButton
+            aria-label="Edit task"
+            icon={<EditIcon />}
+            size="sm"
+            colorScheme="blue"
+            mr={2}
+            onClick={() => onEditClick(task)}
+          />
+          <IconButton
             aria-label="Toggle status"
             icon={<ChevronRightIcon />}
             size="sm"
@@ -123,7 +132,6 @@ function TaskList({ onTaskAdded }) {
         <Text>No tasks to display. Add a new task above!</Text>
       ) : (
         <Flex>
-          {/* To Do Column */}
           <Box flex="1" mr={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={todoDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>To Do</Heading>
             <List spacing={3}>
@@ -132,8 +140,6 @@ function TaskList({ onTaskAdded }) {
               ))}
             </List>
           </Box>
-
-          {/* In Progress Column */}
           <Box flex="1" mx={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={inProgressDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>In Progress</Heading>
             <List spacing={3}>
@@ -142,8 +148,6 @@ function TaskList({ onTaskAdded }) {
               ))}
             </List>
           </Box>
-
-          {/* Done Column */}
           <Box flex="1" ml={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={doneDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>Done</Heading>
             <List spacing={3}>
