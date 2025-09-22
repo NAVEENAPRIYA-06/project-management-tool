@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: project_management_tool
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: 'npm install'
+    startCommand: 'npm start'
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://projecttool:navee2006@cluster0.e9n9j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
