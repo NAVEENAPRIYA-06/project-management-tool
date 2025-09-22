@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useDrag, useDrop } from 'react-dnd';
-import { Box, Heading, List, ListItem, Text, Flex, Spacer, Tag, IconButton, useColorModeValue, chakra } from '@chakra-ui/react';
+import { Box, Heading, List, Text, Flex, Spacer, Tag, IconButton, useColorModeValue, chakra } from '@chakra-ui/react';
 import { DeleteIcon, ChevronRightIcon, EditIcon } from '@chakra-ui/icons';
 import { motion } from 'framer-motion';
 
@@ -10,7 +10,6 @@ const MotionListItem = chakra(motion.li);
 function TaskList({ onTaskAdded, onEditClick }) {
   const [tasks, setTasks] = useState([]);
 
-  // Dynamic colors for dark mode
   const columnBg = useColorModeValue('gray.50', 'gray.700');
   const taskBg = useColorModeValue('white', 'gray.800');
   const taskColor = useColorModeValue('gray.600', 'gray.400');
@@ -145,8 +144,8 @@ function TaskList({ onTaskAdded, onEditClick }) {
       {tasks.length === 0 ? (
         <Text>No tasks to display. Add a new task above!</Text>
       ) : (
-        <Flex flexWrap="wrap" justify="center">
-          <Box flex="1 1 300px" m={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={todoDropRef}>
+        <Flex>
+          <Box flex="1" mr={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={todoDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>To Do</Heading>
             <List spacing={3}>
               {todoTasks.map(task => (
@@ -154,7 +153,7 @@ function TaskList({ onTaskAdded, onEditClick }) {
               ))}
             </List>
           </Box>
-          <Box flex="1 1 300px" m={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={inProgressDropRef}>
+          <Box flex="1" mx={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={inProgressDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>In Progress</Heading>
             <List spacing={3}>
               {inProgressTasks.map(task => (
@@ -162,7 +161,7 @@ function TaskList({ onTaskAdded, onEditClick }) {
               ))}
             </List>
           </Box>
-          <Box flex="1 1 300px" m={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={doneDropRef}>
+          <Box flex="1" ml={2} p={4} bg={columnBg} borderRadius="md" minH="300px" ref={doneDropRef}>
             <Heading as="h4" size="sm" mb={2} color={headingColor}>Done</Heading>
             <List spacing={3}>
               {doneTasks.map(task => (
